@@ -379,8 +379,9 @@
 
         <div class="pill-row">
           <div class="pill">Age range: 18-65</div>
-          <div class="pill">TTD max: 25 000 PLN</div>
-          <div class="pill">PTD / Death max: 500 000 PLN</div>
+          <div class="pill">TTD max: 30 000 PLN</div>
+          <div class="pill">PTD / Death / Disability max: 1 000 000 PLN</div>
+          <div class="pill">HIV max: 200 000 PLN</div>
         </div>
       </div>
 
@@ -530,24 +531,32 @@
         errors.push("Co najmniej jedno świadczenie musi być większe od 0 PLN.");
       }
 
-      if (benefits.ttd_sickness > 25000) {
-        errors.push("TTD choroba przekracza limit underwritingowy 25 000 PLN.");
+      if (benefits.ttd_sickness > 30000) {
+        errors.push("TTD choroba przekracza limit underwritingowy 30 000 PLN.");
       }
 
-      if (benefits.ttd_accident > 25000) {
-        errors.push("TTD wypadek przekracza limit underwritingowy 25 000 PLN.");
+      if (benefits.ttd_accident > 30000) {
+        errors.push("TTD wypadek przekracza limit underwritingowy 30 000 PLN.");
       }
 
-      if (benefits.ptd_accident > 500000) {
-        errors.push("PTD wypadek przekracza limit underwritingowy 500 000 PLN.");
+      if (benefits.ptd_accident > 1000000) {
+        errors.push("PTD wypadek przekracza limit underwritingowy 1 000 000 PLN.");
       }
 
-      if (benefits.ptd_sickness > 500000) {
-        errors.push("PTD choroba przekracza limit underwritingowy 500 000 PLN.");
+      if (benefits.ptd_sickness > 1000000) {
+        errors.push("PTD choroba przekracza limit underwritingowy 1 000 000 PLN.");
       }
 
-      if (benefits.death > 500000) {
-        errors.push("Śmierć przekracza limit underwritingowy 500 000 PLN.");
+      if (benefits.death > 1000000) {
+        errors.push("Śmierć przekracza limit underwritingowy 1 000 000 PLN.");
+      }
+
+      if (benefits.disability > 1000000) {
+        errors.push("Inwalidztwo przekracza limit underwritingowy 1 000 000 PLN.");
+      }
+
+      if (benefits.hiv_hbv_hcv > 200000) {
+        errors.push("HIV/WZW przekracza limit underwritingowy 200 000 PLN.");
       }
 
       return errors;
