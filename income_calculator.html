@@ -18,6 +18,9 @@
       --border: rgba(148, 163, 184, 0.25);
       --danger: #fb7185;
       --danger-soft: rgba(251, 113, 133, 0.16);
+      --warning: #fb923c;
+      --warning-soft: rgba(251, 146, 60, 0.18);
+      --success-soft: rgba(34, 197, 94, 0.16);
       --shadow: 0 20px 45px rgba(2, 8, 23, 0.45);
     }
 
@@ -216,6 +219,52 @@
       border: 1px solid var(--border);
     }
 
+    .decision-box {
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      padding: 14px;
+      display: grid;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .decision-box.accept {
+      border-color: rgba(74, 222, 128, 0.5);
+      background: var(--success-soft);
+    }
+
+    .decision-box.review {
+      border-color: rgba(251, 146, 60, 0.55);
+      background: var(--warning-soft);
+    }
+
+    .decision-box.decline {
+      border-color: rgba(251, 113, 133, 0.55);
+      background: var(--danger-soft);
+    }
+
+    .decision-label {
+      font-size: 13px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .decision-value {
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+    }
+
+    .decision-reasons {
+      margin: 0;
+      padding-left: 18px;
+      display: grid;
+      gap: 4px;
+      font-size: 13px;
+      color: #e2e8f0;
+    }
+
     .summary {
       display: grid;
       gap: 12px;
@@ -402,6 +451,14 @@
       </div>
 
       <div class="card">
+        <div id="decisionBox" class="decision-box accept" aria-live="polite">
+          <div class="decision-label">Decyzja underwritingowa</div>
+          <div id="decisionValue" class="decision-value">AKCEPTACJA</div>
+          <ul id="decisionReasons" class="decision-reasons">
+            <li>Brak czynników wymagających dodatkowej oceny.</li>
+          </ul>
+        </div>
+
         <h2>Wynik kalkulacji</h2>
         <div class="summary">
           <div class="total-box">
@@ -562,6 +619,76 @@
       return errors;
     }
 
+
+    function underwritingDecision(age, riskClass, benefits) {
+      const reasons = [];
+      const benefitValues = Object.values(benefits);
+      const maxBenefit = benefitValues.length ? Math.max(...benefitValues) : 0;
+      const totalBenefits = benefitValues.reduce((sum, value) => sum + value, 0);
+
+      if (age > 60 && (benefits.ttd_sickness > 20000 || benefits.ttd_accident > 20000)) {
+        reasons.push("Wiek powyżej 60 lat i TTD powyżej 20 000 PLN.");
+      }
+
+      if (riskClass === "KLASA V" && maxBenefit > 500000) {
+        reasons.push("KLASA V z wybranym świadczeniem powyżej 500 000 PLN.");
+      }
+
+      if (benefits.ttd_sickness > 30000) {
+        reasons.push("TTD choroba przekracza twardy limit 30 000 PLN.");
+      }
+
+      if (benefits.ttd_accident > 30000) {
+        reasons.push("TTD wypadek przekracza twardy limit 30 000 PLN.");
+      }
+
+      if (reasons.length) {
+        return { decision: "DECLINE", reasons };
+      }
+
+      if (age > 55) {
+        reasons.push("Wiek powyżej 55 lat.");
+      }
+
+      if (totalBenefits > 1500000) {
+        reasons.push("Łączna suma świadczeń przekracza 1 500 000 PLN.");
+      }
+
+      if (riskClass === "KLASA IV") {
+        reasons.push("Klasa ryzyka KLASA IV.");
+      }
+
+      if (benefits.hiv_hbv_hcv > 150000) {
+        reasons.push("HIV/WZW powyżej 150 000 PLN.");
+      }
+
+      if (reasons.length) {
+        return { decision: "REVIEW", reasons };
+      }
+
+      return {
+        decision: "ACCEPT",
+        reasons: ["Brak czynników wymagających dodatkowej oceny."],
+      };
+    }
+
+    function renderUnderwritingDecision(result) {
+      const decisionBox = document.getElementById("decisionBox");
+      const decisionValue = document.getElementById("decisionValue");
+      const decisionReasons = document.getElementById("decisionReasons");
+
+      const decisionLabels = {
+        ACCEPT: "AKCEPTACJA",
+        REVIEW: "DO OCENY",
+        DECLINE: "ODRZUCENIE",
+      };
+
+      decisionBox.classList.remove("accept", "review", "decline");
+      decisionBox.classList.add(result.decision.toLowerCase());
+      decisionValue.textContent = decisionLabels[result.decision] || result.decision;
+      decisionReasons.innerHTML = result.reasons.map(reason => `<li>${reason}</li>`).join("");
+    }
+
     function priceRisk(riskKey, benefit, riskClass, age) {
       if (!benefit || benefit <= 0) return 0;
       const base = baseRates[riskKey] || 0;
@@ -592,6 +719,10 @@
       showValidation(validationErrors);
 
       if (validationErrors.length) {
+        renderUnderwritingDecision({
+          decision: "ACCEPT",
+          reasons: ["Decyzja dostępna po poprawnym uzupełnieniu danych wejściowych."],
+        });
         document.getElementById("componentsTotal").textContent = formatMoney(0);
         document.getElementById("distributionFee").textContent = formatMoney(0);
         document.getElementById("totalPremium").textContent = formatMoney(0);
@@ -600,6 +731,9 @@
         renderBreakdown(emptyRows);
         return;
       }
+
+      const decisionResult = underwritingDecision(age, riskClass, benefits);
+      renderUnderwritingDecision(decisionResult);
 
       let componentsTotal = 0;
       let benefitsTotal = 0;
