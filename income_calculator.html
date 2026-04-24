@@ -3,34 +3,43 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kalkulator składki — Utrata dochodu</title>
+  <title>Kalkulator składki PRO — Utrata dochodu</title>
   <style>
     :root {
-      --bg: #0f172a;
-      --panel: #111827;
-      --card: #1f2937;
+      --bg: #060b16;
+      --bg-alt: #0c1326;
+      --panel: rgba(9, 17, 34, 0.82);
+      --card: rgba(15, 26, 47, 0.92);
       --muted: #94a3b8;
       --text: #f8fafc;
-      --accent: #22c55e;
-      --accent2: #38bdf8;
-      --border: #334155;
+      --accent: #22d3ee;
+      --accent-strong: #0ea5e9;
+      --success: #22c55e;
+      --border: rgba(148, 163, 184, 0.25);
       --danger: #fb7185;
+      --danger-soft: rgba(251, 113, 133, 0.16);
+      --shadow: 0 20px 45px rgba(2, 8, 23, 0.45);
     }
 
     * { box-sizing: border-box; }
 
     body {
       margin: 0;
-      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: radial-gradient(circle at top left, #1e293b, var(--bg));
-      color: var(--text);
       min-height: 100vh;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 10% -10%, rgba(14, 165, 233, 0.22), transparent 45%),
+        radial-gradient(circle at 95% 10%, rgba(34, 197, 94, 0.14), transparent 35%),
+        linear-gradient(145deg, var(--bg), var(--bg-alt));
+      color: var(--text);
       padding: 24px;
     }
 
     .app {
-      max-width: 1180px;
+      max-width: 1240px;
       margin: 0 auto;
+      display: grid;
+      gap: 18px;
     }
 
     .header {
@@ -38,82 +47,98 @@
       justify-content: space-between;
       gap: 16px;
       align-items: flex-start;
-      margin-bottom: 24px;
+      background: linear-gradient(135deg, rgba(14, 165, 233, 0.17), rgba(15, 23, 42, 0.55));
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
     }
 
     .title h1 {
       margin: 0;
-      font-size: 28px;
+      font-size: clamp(24px, 3.1vw, 34px);
       letter-spacing: -0.04em;
     }
 
     .title p {
-      margin: 8px 0 0;
+      margin: 10px 0 0;
       color: var(--muted);
-      line-height: 1.5;
+      line-height: 1.55;
+      max-width: 900px;
     }
 
     .badge {
-      padding: 10px 14px;
-      border: 1px solid var(--border);
+      border: 1px solid rgba(34, 211, 238, 0.45);
       border-radius: 999px;
-      background: rgba(15, 23, 42, 0.7);
-      color: var(--accent);
+      background: rgba(6, 182, 212, 0.11);
+      color: #67e8f9;
       font-weight: 700;
+      padding: 10px 14px;
       white-space: nowrap;
     }
 
     .grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 18px;
     }
 
     .card {
-      background: rgba(31, 41, 55, 0.86);
+      background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 22px;
+      border-radius: 20px;
       padding: 20px;
-      box-shadow: 0 24px 60px rgba(0,0,0,0.24);
+      box-shadow: var(--shadow);
     }
 
     .card h2 {
-      margin: 0 0 16px;
+      margin: 0 0 14px;
       font-size: 18px;
+      letter-spacing: -0.02em;
     }
+
+    .card p {
+      margin: 0;
+    }
+
+    .span-2 { grid-column: span 2; }
 
     .form-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 14px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
     }
 
     label {
       display: block;
-      font-size: 13px;
+      font-size: 12px;
       color: var(--muted);
       margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
     }
 
     input, select {
       width: 100%;
       border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 12px 12px;
-      background: #0b1220;
+      border-radius: 12px;
+      padding: 11px 12px;
+      background: rgba(2, 6, 23, 0.75);
       color: var(--text);
-      font-size: 15px;
       outline: none;
+      font-size: 14px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
 
     input:focus, select:focus {
-      border-color: var(--accent2);
-      box-shadow: 0 0 0 3px rgba(56,189,248,0.14);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.2);
     }
 
     .risk-list {
       display: grid;
-      gap: 12px;
+      gap: 10px;
     }
 
     .risk-row {
@@ -121,111 +146,188 @@
       grid-template-columns: 1fr 170px;
       gap: 12px;
       align-items: center;
-      padding: 12px;
       border: 1px solid var(--border);
-      border-radius: 16px;
-      background: rgba(15, 23, 42, 0.55);
+      border-radius: 14px;
+      padding: 12px;
+      background: rgba(2, 6, 23, 0.42);
     }
 
     .risk-name {
       font-weight: 700;
+      letter-spacing: -0.01em;
     }
 
     .risk-hint {
+      margin-top: 3px;
       color: var(--muted);
       font-size: 12px;
-      margin-top: 4px;
+    }
+
+    .validation-box {
+      margin-top: 14px;
+      border: 1px solid rgba(251, 113, 133, 0.5);
+      background: var(--danger-soft);
+      border-radius: 12px;
+      padding: 12px;
+      display: none;
+    }
+
+    .validation-box.visible { display: block; }
+
+    .validation-title {
+      color: #fecdd3;
+      font-weight: 700;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+
+    .validation-list {
+      margin: 0;
+      padding-left: 18px;
+      color: #ffe4e6;
+      display: grid;
+      gap: 6px;
+      font-size: 13px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 11px 14px;
+      cursor: pointer;
+      font-weight: 700;
+      color: #082f49;
+      background: linear-gradient(120deg, #67e8f9, #22d3ee);
+      transition: transform 0.15s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+
+    button.secondary {
+      background: #1e293b;
+      color: #dbeafe;
+      border: 1px solid var(--border);
     }
 
     .summary {
       display: grid;
-      gap: 14px;
+      gap: 12px;
     }
 
     .total-box {
-      background: linear-gradient(135deg, rgba(34,197,94,0.20), rgba(56,189,248,0.14));
-      border: 1px solid rgba(34,197,94,0.42);
-      border-radius: 22px;
-      padding: 20px;
+      border-radius: 16px;
+      padding: 16px;
+      background: linear-gradient(145deg, rgba(34, 197, 94, 0.22), rgba(14, 165, 233, 0.16));
+      border: 1px solid rgba(74, 222, 128, 0.45);
     }
 
     .total-label {
-      color: var(--muted);
-      font-size: 14px;
+      font-size: 13px;
+      color: #dcfce7;
+      opacity: 0.88;
     }
 
     .total-value {
-      font-size: 40px;
+      margin-top: 5px;
+      font-size: clamp(28px, 4vw, 42px);
       font-weight: 900;
-      letter-spacing: -0.05em;
-      margin-top: 6px;
+      letter-spacing: -0.04em;
     }
 
     .line {
       display: flex;
       justify-content: space-between;
-      gap: 16px;
+      gap: 10px;
       border-bottom: 1px solid var(--border);
-      padding: 11px 0;
-      color: #dbeafe;
+      padding-bottom: 10px;
+      font-size: 14px;
     }
 
-    .line span:first-child {
-      color: var(--muted);
-    }
+    .line span { color: var(--muted); }
 
     .small-note {
+      margin-top: 14px;
       color: var(--muted);
       font-size: 12px;
       line-height: 1.5;
-      margin-top: 14px;
     }
 
-    .actions {
-      display: flex;
-      gap: 10px;
-      margin-top: 16px;
-      flex-wrap: wrap;
-    }
-
-    button {
-      border: 0;
+    .table-wrap {
+      border: 1px solid var(--border);
       border-radius: 14px;
-      padding: 12px 16px;
-      cursor: pointer;
-      font-weight: 800;
-      color: #052e16;
-      background: var(--accent);
+      overflow: auto;
+      background: rgba(2, 6, 23, 0.36);
     }
 
-    button.secondary {
-      color: var(--text);
-      background: #334155;
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 540px;
     }
+
+    th, td {
+      padding: 11px 12px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+      text-align: left;
+      font-size: 13px;
+    }
+
+    th {
+      color: #bae6fd;
+      background: rgba(2, 6, 23, 0.75);
+      font-weight: 700;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    td:last-child, th:last-child { text-align: right; }
+
+    .muted { color: var(--muted); }
 
     .pill-row {
       display: flex;
-      flex-wrap: wrap;
       gap: 8px;
+      flex-wrap: wrap;
       margin-top: 12px;
     }
 
     .pill {
       border: 1px solid var(--border);
-      background: rgba(15, 23, 42, 0.6);
+      background: rgba(2, 6, 23, 0.6);
       border-radius: 999px;
-      padding: 7px 10px;
-      font-size: 12px;
+      padding: 6px 10px;
+      font-size: 11px;
       color: var(--muted);
     }
 
-    @media (max-width: 860px) {
+    @media (max-width: 980px) {
       body { padding: 14px; }
       .grid { grid-template-columns: 1fr; }
+      .span-2 { grid-column: span 1; }
       .header { flex-direction: column; }
-      .form-grid { grid-template-columns: 1fr; }
-      .risk-row { grid-template-columns: 1fr; }
-      .total-value { font-size: 34px; }
+    }
+
+    @media (max-width: 620px) {
+      .form-grid, .risk-row {
+        grid-template-columns: 1fr;
+      }
+
+      .actions button {
+        flex: 1;
+        min-width: 100%;
+      }
+
+      .card {
+        padding: 16px;
+      }
     }
   </style>
 </head>
@@ -233,10 +335,10 @@
   <main class="app">
     <section class="header">
       <div class="title">
-        <h1>Kalkulator składki — utrata dochodu</h1>
-        <p>Taryfikator komponentowy v2: base rate × faktor klasy × faktor wieku + opłata dystrybucyjna.</p>
+        <h1>PRO Underwriting Premium Calculator</h1>
+        <p>Kalkulator underwritingowy dla ubezpieczenia utraty dochodu oparty o taryfę v2 (base rate × faktor klasy × faktor wieku + opłata dystrybucyjna).</p>
       </div>
-      <div class="badge">Pricing engine v2</div>
+      <div class="badge">Pricing engine v2 • UW rules</div>
     </section>
 
     <section class="grid">
@@ -244,8 +346,8 @@
         <h2>Parametry klienta</h2>
         <div class="form-grid">
           <div>
-            <label for="age">Wiek</label>
-            <input id="age" type="number" value="42" min="18" max="75" />
+            <label for="age">Wiek ubezpieczonego</label>
+            <input id="age" type="number" value="42" min="18" max="65" />
           </div>
           <div>
             <label for="riskClass">Klasa ryzyka</label>
@@ -276,15 +378,21 @@
         </div>
 
         <div class="pill-row">
-          <div class="pill">TTD sickness: klasa neutralna</div>
-          <div class="pill">Accident: klasa aktywna</div>
-          <div class="pill">Wiek: aktywny dla TTD sickness</div>
+          <div class="pill">Age range: 18-65</div>
+          <div class="pill">TTD max: 25 000 PLN</div>
+          <div class="pill">PTD / Death max: 500 000 PLN</div>
         </div>
       </div>
 
       <div class="card">
         <h2>Świadczenia / sumy ubezpieczenia</h2>
         <div class="risk-list" id="riskList"></div>
+
+        <div id="validationBox" class="validation-box" aria-live="polite">
+          <div class="validation-title">Nie można wykonać kalkulacji:</div>
+          <ul id="validationList" class="validation-list"></ul>
+        </div>
+
         <div class="actions">
           <button onclick="calculate()">Przelicz składkę</button>
           <button class="secondary" onclick="loadExample()">Wczytaj przykład</button>
@@ -303,12 +411,24 @@
           <div class="line"><span>Opłata dystrybucyjna</span><strong id="distributionFee">0 PLN</strong></div>
           <div class="line"><span>Efektywna stawka od świadczeń</span><strong id="effectiveRate">0%</strong></div>
         </div>
-        <p class="small-note">To jest kalkulator demonstracyjny oparty na Twojej taryfie v2. Nie uwzględnia jeszcze walidacji underwritingowej, limitów akceptacyjnych, zgód, wyłączeń ani reguł medycznych.</p>
+        <p class="small-note">Walidacje underwritingowe działają przed kalkulacją składki. Silnik taryfowy v2 pozostał bez zmian.</p>
       </div>
 
-      <div class="card">
-        <h2>Rozbicie składki</h2>
-        <div id="breakdown"></div>
+      <div class="card span-2">
+        <h2>Rozbicie składki (premium breakdown)</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Ryzyko</th>
+                <th>Benefit</th>
+                <th>Rate</th>
+                <th>Premium</th>
+              </tr>
+            </thead>
+            <tbody id="breakdownBody"></tbody>
+          </table>
+        </div>
       </div>
     </section>
   </main>
@@ -379,6 +499,60 @@
       `).join("");
     }
 
+    function showValidation(errors) {
+      const box = document.getElementById("validationBox");
+      const list = document.getElementById("validationList");
+      if (!errors.length) {
+        box.classList.remove("visible");
+        list.innerHTML = "";
+        return;
+      }
+      list.innerHTML = errors.map(error => `<li>${error}</li>`).join("");
+      box.classList.add("visible");
+    }
+
+    function collectBenefits() {
+      return risks.reduce((acc, risk) => {
+        acc[risk.key] = Number(document.getElementById(risk.key).value || 0);
+        return acc;
+      }, {});
+    }
+
+    function validateInputs(age, benefits) {
+      const errors = [];
+
+      if (!Number.isFinite(age) || age < 18 || age > 65) {
+        errors.push("Wiek musi mieścić się w zakresie 18–65 lat.");
+      }
+
+      const hasPositiveBenefit = Object.values(benefits).some(value => value > 0);
+      if (!hasPositiveBenefit) {
+        errors.push("Co najmniej jedno świadczenie musi być większe od 0 PLN.");
+      }
+
+      if (benefits.ttd_sickness > 25000) {
+        errors.push("TTD choroba przekracza limit underwritingowy 25 000 PLN.");
+      }
+
+      if (benefits.ttd_accident > 25000) {
+        errors.push("TTD wypadek przekracza limit underwritingowy 25 000 PLN.");
+      }
+
+      if (benefits.ptd_accident > 500000) {
+        errors.push("PTD wypadek przekracza limit underwritingowy 500 000 PLN.");
+      }
+
+      if (benefits.ptd_sickness > 500000) {
+        errors.push("PTD choroba przekracza limit underwritingowy 500 000 PLN.");
+      }
+
+      if (benefits.death > 500000) {
+        errors.push("Śmierć przekracza limit underwritingowy 500 000 PLN.");
+      }
+
+      return errors;
+    }
+
     function priceRisk(riskKey, benefit, riskClass, age) {
       if (!benefit || benefit <= 0) return 0;
       const base = baseRates[riskKey] || 0;
@@ -387,17 +561,43 @@
       return benefit * base * classFactor * ageFactor;
     }
 
+    function renderBreakdown(rows) {
+      const body = document.getElementById("breakdownBody");
+      body.innerHTML = rows.map(row => `
+        <tr>
+          <td>${row.label}</td>
+          <td>${formatMoney(row.benefit)}</td>
+          <td class="muted">${formatPct(row.rate)}</td>
+          <td><strong>${formatMoney(row.premium)}</strong></td>
+        </tr>
+      `).join("");
+    }
+
     function calculate() {
       const age = Number(document.getElementById("age").value || 40);
       const riskClass = document.getElementById("riskClass").value;
       const feeRate = Number(document.getElementById("fee").value);
+      const benefits = collectBenefits();
+
+      const validationErrors = validateInputs(age, benefits);
+      showValidation(validationErrors);
+
+      if (validationErrors.length) {
+        document.getElementById("componentsTotal").textContent = formatMoney(0);
+        document.getElementById("distributionFee").textContent = formatMoney(0);
+        document.getElementById("totalPremium").textContent = formatMoney(0);
+        document.getElementById("effectiveRate").textContent = formatPct(0);
+        const emptyRows = risks.map(risk => ({ ...risk, benefit: benefits[risk.key], premium: 0, rate: 0 }));
+        renderBreakdown(emptyRows);
+        return;
+      }
 
       let componentsTotal = 0;
       let benefitsTotal = 0;
       const rows = [];
 
       risks.forEach(r => {
-        const benefit = Number(document.getElementById(r.key).value || 0);
+        const benefit = benefits[r.key];
         const premium = priceRisk(r.key, benefit, riskClass, age);
         const rate = benefit > 0 ? premium / benefit : 0;
         componentsTotal += premium;
@@ -414,12 +614,7 @@
       document.getElementById("totalPremium").textContent = formatMoney(total);
       document.getElementById("effectiveRate").textContent = formatPct(effectiveRate);
 
-      document.getElementById("breakdown").innerHTML = rows.map(row => `
-        <div class="line">
-          <span>${row.label} <small style="color:var(--muted)">(${formatPct(row.rate)})</small></span>
-          <strong>${formatMoney(row.premium)}</strong>
-        </div>
-      `).join("");
+      renderBreakdown(rows);
     }
 
     function loadExample() {
@@ -427,20 +622,24 @@
       document.getElementById("riskClass").value = "KLASA II";
       document.getElementById("fee").value = "0.10";
       const example = {
-        death: 0,
-        disability: 0,
+        death: 200000,
+        disability: 100000,
         ptd_accident: 100000,
         ptd_sickness: 100000,
         ttd_accident: 15000,
         ttd_sickness: 15000,
         hiv_hbv_hcv: 200000,
       };
-      risks.forEach(r => document.getElementById(r.key).value = example[r.key] || 0);
+      risks.forEach(r => {
+        document.getElementById(r.key).value = example[r.key] || 0;
+      });
       calculate();
     }
 
     function clearBenefits() {
-      risks.forEach(r => document.getElementById(r.key).value = 0);
+      risks.forEach(r => {
+        document.getElementById(r.key).value = 0;
+      });
       calculate();
     }
 
