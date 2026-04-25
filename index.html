@@ -357,6 +357,59 @@
       color: var(--muted);
     }
 
+
+    .qa-flow {
+      display: grid;
+      gap: 12px;
+    }
+
+    .qa-section-title {
+      margin: 10px 0 0;
+      font-size: 14px;
+      color: #bae6fd;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .qa-question {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      background: rgba(2, 6, 23, 0.42);
+    }
+
+    .qa-summary {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      background: rgba(2, 6, 23, 0.36);
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .qa-list {
+      margin: 0;
+      padding-left: 18px;
+      display: grid;
+      gap: 4px;
+      font-size: 13px;
+      color: #e2e8f0;
+    }
+
+    .qa-kv {
+      display: grid;
+      grid-template-columns: 230px 1fr;
+      gap: 10px;
+      font-size: 14px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+    }
+
+    .qa-kv:last-child { border-bottom: 0; }
+
+    .qa-kv strong { color: #bae6fd; }
+
     @media (max-width: 980px) {
       body { padding: 14px; }
       .grid { grid-template-columns: 1fr; }
@@ -365,7 +418,7 @@
     }
 
     @media (max-width: 620px) {
-      .form-grid, .risk-row {
+      .form-grid, .risk-row, .qa-kv {
         grid-template-columns: 1fr;
       }
 
@@ -473,6 +526,43 @@
       </div>
 
       <div class="card span-2">
+        <h2>MVP: Klasyfikacja branży i pytania underwritingowe OC</h2>
+        <p class="small-note">Zakres MVP obejmuje tylko klasyfikację i pytania. Kalkulacja składki dla OC zostanie dodana w kolejnym etapie.</p>
+
+        <div class="qa-flow">
+          <div class="qa-question">
+            <label for="industryGroup">Grupa branżowa</label>
+            <select id="industryGroup"></select>
+          </div>
+
+          <div>
+            <div class="qa-section-title">Pytania podstawowe</div>
+            <div id="coreQuestions" class="form-grid"></div>
+          </div>
+
+          <div>
+            <div class="qa-section-title">Pytania gałęziowe (dynamiczne)</div>
+            <div id="branchQuestions" class="form-grid"></div>
+          </div>
+
+          <div class="actions">
+            <button class="secondary" type="button" onclick="renderIndustryFlow()">Odśwież pytania</button>
+            <button type="button" onclick="generateIndustrySummary()">Podsumuj przypadek OC</button>
+          </div>
+        </div>
+
+        <div id="industrySummary" class="qa-summary" aria-live="polite">
+          <div class="qa-kv"><strong>Grupa branżowa</strong><span>—</span></div>
+          <div class="qa-kv"><strong>Modele taryfikacji</strong><span>—</span></div>
+          <div class="qa-kv"><strong>Zakresy ochrony</strong><span>—</span></div>
+          <div class="qa-kv"><strong>Flagi ryzyka</strong><span>—</span></div>
+          <div class="qa-kv"><strong>Referral do underwritera</strong><span>—</span></div>
+          <div class="qa-kv"><strong>Brakujące dane</strong><span>—</span></div>
+        </div>
+      </div>
+
+
+      <div class="card span-2">
         <h2>Rozbicie składki (premium breakdown)</h2>
         <div class="table-wrap">
           <table>
@@ -491,6 +581,7 @@
     </section>
   </main>
 
+  <script src="industry-question-engine.js"></script>
   <script>
     const baseRates = {
       death: 0.0015597,
@@ -786,7 +877,107 @@
       calculate();
     }
 
+
+    function formatList(items) {
+      if (!items || !items.length) return "—";
+      return items.join(", ");
+    }
+
+    function questionInputHtml(question) {
+      const currentValue = industryAnswersState[question.id] || "";
+
+      if (question.type === "select") {
+        const options = (question.options || []).map(option => `<option value="${option.value}" ${currentValue === option.value ? "selected" : ""}>${option.label}</option>`).join("");
+        return `
+          <div class="qa-question">
+            <label for="${question.id}">${question.label}${question.required ? " *" : ""}</label>
+            <select id="${question.id}" data-question-id="${question.id}">
+              <option value="">Wybierz...</option>
+              ${options}
+            </select>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="qa-question">
+          <label for="${question.id}">${question.label}${question.required ? " *" : ""}</label>
+          <input id="${question.id}" data-question-id="${question.id}" type="number" min="0" step="1" value="${currentValue}" />
+        </div>
+      `;
+    }
+
+    const industryAnswersState = {};
+
+    function collectIndustryAnswers() {
+      const answers = { ...industryAnswersState };
+      document.querySelectorAll("[data-question-id]").forEach((input) => {
+        answers[input.dataset.questionId] = input.value;
+      });
+      return answers;
+    }
+
+    function bindIndustryFlowEvents() {
+      document.addEventListener("change", (event) => {
+        const target = event.target;
+        if (!target || !target.dataset || !target.dataset.questionId) return;
+        industryAnswersState[target.dataset.questionId] = target.value;
+        renderIndustryFlow();
+      });
+    }
+
+    function populateIndustryGroupSelect() {
+      const select = document.getElementById("industryGroup");
+      const { industryGroups } = window.IndustryQuestionEngine.config;
+      select.innerHTML = industryGroups.map(group => `<option value="${group.key}">${group.label}</option>`).join("");
+      if (!select.value && industryGroups.length) {
+        select.value = industryGroups[0].key;
+      }
+      select.addEventListener("change", () => {
+        renderIndustryFlow();
+        generateIndustrySummary();
+      });
+    }
+
+    function renderIndustryFlow() {
+      const industryGroup = document.getElementById("industryGroup").value;
+      Object.assign(industryAnswersState, collectIndustryAnswers());
+      const visible = window.IndustryQuestionEngine.getVisibleQuestions(industryAnswersState, industryGroup);
+
+      const coreRoot = document.getElementById("coreQuestions");
+      coreRoot.innerHTML = visible.core.map(questionInputHtml).join("");
+
+      const branchRoot = document.getElementById("branchQuestions");
+      if (!visible.branchQuestions.length) {
+        branchRoot.innerHTML = '<p class="small-note">Brak dodatkowych pytań dla aktualnych odpowiedzi.</p>';
+      } else {
+        branchRoot.innerHTML = visible.branchQuestions.map(questionInputHtml).join("");
+      }
+    }
+
+    function generateIndustrySummary() {
+      const industryGroup = document.getElementById("industryGroup").value;
+      const answers = collectIndustryAnswers();
+      const result = window.IndustryQuestionEngine.evaluateCase(industryGroup, answers);
+
+      const summary = document.getElementById("industrySummary");
+      summary.innerHTML = `
+        <div class="qa-kv"><strong>Grupa branżowa</strong><span>${result.industryLabel}</span></div>
+        <div class="qa-kv"><strong>Modele taryfikacji</strong><span>${formatList(result.pricingModels)}</span></div>
+        <div class="qa-kv"><strong>Zakresy ochrony</strong><span>${formatList(result.coverages)}</span></div>
+        <div class="qa-kv"><strong>Flagi ryzyka</strong><span>${formatList(result.riskFlags)}</span></div>
+        <div class="qa-kv"><strong>Referral do underwritera</strong><span>${result.referral ? "TAK" : "NIE"}</span></div>
+        <div class="qa-kv"><strong>Brakujące dane</strong><span>${formatList(result.missingData)}</span></div>
+      `;
+
+      // TODO: W tym miejscu zostanie podłączona kalkulacja składki OC po zatwierdzeniu modelu taryfikacji.
+    }
+
     renderRiskInputs();
+    populateIndustryGroupSelect();
+    bindIndustryFlowEvents();
+    renderIndustryFlow();
+    generateIndustrySummary();
     loadExample();
   </script>
 </body>
